@@ -2,36 +2,45 @@
 
 namespace App\Controllers;
 
-use App\Models\PatientModel;
+use CodeIgniter\Controller;
 use App\Models\PatientHistoryModel;
-use App\Libraries\WHO_ICD;
+use App\Models\PatientModel;
 
-class MedicalRecords extends BaseController
+class MedicalRecord extends BaseController
 {
+    protected $patientHistoryModel;
     protected $patientModel;
-    protected $historyModel;
-    protected $icdApi;
-    
+
     public function __construct()
     {
+        $this->patientHistoryModel = new PatientHistoryModel();
         $this->patientModel = new PatientModel();
-        $this->historyModel = new PatientHistoryModel();
-        $this->icdApi = new WHO_ICD();
     }
 
     public function index()
     {
-        if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'Doctor') {
+            return redirect()->to('/dashboard');
+        }
+
+        // Get filter parameter
+        $filter = $this->request->getGet('filter');
+        $doctor_id = session()->get('user_id');
+
+        // Get records based on filter
+        if ($filter === 'pending') {
+            $records = $this->patientHistoryModel->where('consultation_by', $doctor_id)
+                ->where('is_done', false)
+                ->findAll();
+        } else {
+            $records = $this->patientHistoryModel->where('consultation_by', $doctor_id)
+                ->findAll();
         }
 
         $data = [
             'title' => 'Medical Records',
-            'records' => $this->historyModel
-                ->select('patient_histories.*, patients.name as patient_name')
-                ->join('patients', 'patients.record_number = patient_histories.record_number')
-                ->orderBy('date_visit', 'DESC')
-                ->findAll()
+            'records' => $records,
+            'filter' => $filter
         ];
 
         return view('medical_records/index', $data);
@@ -39,101 +48,120 @@ class MedicalRecords extends BaseController
 
     public function create($recordNumber = null)
     {
-        if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
+        if (!$recordNumber) {
+            return redirect()->back()->with('error', 'Record number is required');
         }
 
         if ($this->request->getMethod() === 'post') {
-            $postData = $this->request->getPost();
-            $postData['consultation_by'] = session()->get('id');
-            $postData['registered_by'] = session()->get('id');
-            $postData['date_visit'] = date('Y-m-d H:i:s');
-            
-            if ($this->validate($this->historyModel->validationRules)) {
-                $this->historyModel->insert($postData);
-                return redirect()->to('/medical-records')->with('success', 'Medical record created successfully');
-            }
-            
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
+            $record = [
+                'record_number' => $recordNumber,
+                'date_visit' => date('Y-m-d H:i:s'),
+                'symptoms' => $this->request->getPost('symptoms'),
+                'doctor_diagnose' => $this->request->getPost('doctor_diagnose'),
+                'icd10_code' => $this->request->getPost('icd10_code'),
+                'icd10_name' => $this->request->getPost('icd10_name'),
+                'consultation_by' => session()->get('user_id'),
+                'registered_by' => session()->get('user_id'),
+                'is_done' => false
+            ];
 
-        $patient = null;
-        if ($recordNumber) {
-            $patient = $this->patientModel->where('record_number', $recordNumber)->first();
-            if (!$patient) {
-                return redirect()->to('/medical-records')->with('error', 'Patient not found');
+            if ($this->patientHistoryModel->insert($record)) {
+                return redirect()->to('/medical-records')
+                    ->with('success', 'Medical record created successfully');
             }
+
+            return redirect()->back()
+                ->with('error', 'Failed to create medical record')
+                ->withInput();
         }
 
         $data = [
-            'title' => 'New Medical Record',
-            'patient' => $patient,
-            'patients' => $this->patientModel->findAll()
+            'title' => 'Create Medical Record',
+            'patient' => $this->patientModel->where('record_number', $recordNumber)->first()
         ];
+
+        if (empty($data['patient'])) {
+            return redirect()->back()->with('error', 'Patient not found');
+        }
 
         return view('medical_records/create', $data);
     }
 
-    public function view($id)
+    public function update($id)
     {
-        if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
-        }
-
-        $record = $this->historyModel
-            ->select('patient_histories.*, patients.name as patient_name')
-            ->join('patients', 'patients.record_number = patient_histories.record_number')
-            ->find($id);
+        $record = $this->patientHistoryModel->find($id);
 
         if (!$record) {
-            return redirect()->to('/medical-records')->with('error', 'Record not found');
+            return redirect()->back()->with('error', 'Record not found');
+        }
+
+        if ($this->request->getMethod() === 'post') {
+            $data = [
+                'symptoms' => $this->request->getPost('symptoms'),
+                'doctor_diagnose' => $this->request->getPost('doctor_diagnose'),
+                'icd10_code' => $this->request->getPost('icd10_code'),
+                'icd10_name' => $this->request->getPost('icd10_name'),
+                'is_done' => $this->request->getPost('is_done') ? true : false
+            ];
+
+            if ($this->patientHistoryModel->update($id, $data)) {
+                return redirect()->to('/medical-records')
+                    ->with('success', 'Medical record updated successfully');
+            }
+
+            return redirect()->back()
+                ->with('error', 'Failed to update medical record')
+                ->withInput();
         }
 
         $data = [
-            'title' => 'View Medical Record',
-            'record' => $record
+            'title' => 'Update Medical Record',
+            'record' => $record,
+            'patient' => $this->patientModel->where('record_number', $record['record_number'])->first()
         ];
 
-        return view('medical_records/view', $data);
+        return view('medical_records/edit', $data);
     }
 
-    public function searchICD10()
+    public function searchICD()
     {
-        if (!session()->get('isLoggedIn')) {
-            return $this->response->setJSON(['error' => 'Unauthorized']);
+        $term = $this->request->getGet('term');
+
+        if (empty($term)) {
+            return $this->response->setJSON([]);
         }
 
-        $query = $this->request->getGet('q');
-        if (empty($query)) {
-            return $this->response->setJSON(['error' => 'Query parameter is required']);
-        }
+        try {
+            // Call WHO ICD API here
+            $client = \Config\Services::curlrequest();
+            $response = $client->request('GET', 'https://id.who.int/icdapi/entity/search', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'API-Version' => 'v2',
+                    'Accept-Language' => 'en'
+                ],
+                'query' => [
+                    'q' => $term,
+                    'releaseId' => '2023-01'
+                ]
+            ]);
 
-        $results = $this->icdApi->searchICD10($query);
-        return $this->response->setJSON($results);
+            return $this->response->setJSON(json_decode($response->getBody()));
+        } catch (\Exception $e) {
+            log_message('error', 'ICD API Error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'error' => 'Failed to fetch ICD codes. Please try again later.'
+            ])->setStatusCode(500);
+        }
     }
 
-    public function getICD10Details($code)
+    public function getPendingPatients()
     {
-        if (!session()->get('isLoggedIn')) {
-            return $this->response->setJSON(['error' => 'Unauthorized']);
-        }
+        $doctor_id = session()->get('user_id');
+        $records = $this->patientHistoryModel->where('consultation_by', $doctor_id)
+            ->where('is_done', false)
+            ->findAll();
 
-        $results = $this->icdApi->getICD10Details($code);
-        return $this->response->setJSON($results);
-    }
-
-    public function complete($id)
-    {
-        if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
-        }
-
-        $record = $this->historyModel->find($id);
-        if (!$record) {
-            return redirect()->to('/medical-records')->with('error', 'Record not found');
-        }
-
-        $this->historyModel->update($id, ['is_done' => true]);
-        return redirect()->to('/medical-records')->with('success', 'Medical record marked as complete');
+        return $this->response->setJSON($records);
     }
 }

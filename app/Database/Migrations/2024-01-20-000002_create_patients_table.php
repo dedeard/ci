@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreatePatientTable extends Migration
+class CreatePatientsTable extends Migration
 {
     public function up()
     {
@@ -16,8 +16,8 @@ class CreatePatientTable extends Migration
                 'auto_increment' => true,
             ],
             'record_number' => [
-                'type' => 'VARCHAR',
-                'constraint' => 50,
+                'type' => 'INT',
+                'constraint' => 11,
                 'unique' => true,
             ],
             'name' => [
@@ -29,8 +29,7 @@ class CreatePatientTable extends Migration
             ],
             'nik' => [
                 'type' => 'VARCHAR',
-                'constraint' => 16,
-                'unique' => true,
+                'constraint' => 20,
             ],
             'phone' => [
                 'type' => 'VARCHAR',
@@ -42,17 +41,12 @@ class CreatePatientTable extends Migration
             'blood_type' => [
                 'type' => 'ENUM',
                 'constraint' => ['A', 'B', 'AB', 'O'],
-                'null' => true,
             ],
             'weight' => [
-                'type' => 'DECIMAL',
-                'constraint' => '5,2',
-                'null' => true,
+                'type' => 'FLOAT',
             ],
             'height' => [
-                'type' => 'INT',
-                'constraint' => 3,
-                'null' => true,
+                'type' => 'FLOAT',
             ],
             'created_at' => [
                 'type' => 'DATETIME',
@@ -63,7 +57,7 @@ class CreatePatientTable extends Migration
                 'null' => true,
             ],
         ]);
-        
+
         $this->forge->addKey('id', true);
         $this->forge->createTable('patients');
     }

@@ -105,5 +105,22 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'auth' => [
+            'before' => [
+                'dashboard/*',
+                'dashboard',
+                'patients/*',
+                'patients',
+                'medical-records/*',
+                'medical-records'
+            ]
+        ],
+        'admin' => [
+            'before' => [
+                'users/*',
+                'users'
+            ]
+        ]
+    ];
 }

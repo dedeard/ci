@@ -16,8 +16,8 @@ class CreatePatientHistoryTable extends Migration
                 'auto_increment' => true,
             ],
             'record_number' => [
-                'type' => 'VARCHAR',
-                'constraint' => 50,
+                'type' => 'INT',
+                'constraint' => 11,
             ],
             'date_visit' => [
                 'type' => 'DATETIME',
@@ -40,11 +40,11 @@ class CreatePatientHistoryTable extends Migration
             ],
             'icd10_code' => [
                 'type' => 'VARCHAR',
-                'constraint' => 10,
+                'constraint' => 20,
             ],
             'icd10_name' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
+                'constraint' => 100,
             ],
             'is_done' => [
                 'type' => 'BOOLEAN',
@@ -59,16 +59,16 @@ class CreatePatientHistoryTable extends Migration
                 'null' => true,
             ],
         ]);
-        
+
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('record_number', 'patients', 'record_number', 'CASCADE', 'CASCADE');
         $this->forge->addForeignKey('registered_by', 'users', 'id', 'CASCADE', 'CASCADE');
         $this->forge->addForeignKey('consultation_by', 'users', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('patient_histories');
+        $this->forge->createTable('patient_history');
     }
 
     public function down()
     {
-        $this->forge->dropTable('patient_histories');
+        $this->forge->dropTable('patient_history');
     }
 }
