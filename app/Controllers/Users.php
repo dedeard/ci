@@ -115,8 +115,9 @@ class Users extends Controller
             }
         }
 
-        return view('users/create', [
+        return view('users/form', [
             'title' => 'Create New User',
+            'old' => $this->request->getPost(),
             'validation' => \Config\Services::validation()
         ]);
     }
@@ -183,9 +184,10 @@ class Users extends Controller
             }
         }
 
-        return view('users/edit', [
+        return view('users/form', [
             'title' => 'Edit User',
             'user' => $user,
+            'old' => $this->request->getPost(),
             'validation' => \Config\Services::validation()
         ]);
     }

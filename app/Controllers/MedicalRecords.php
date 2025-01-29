@@ -6,7 +6,7 @@ use CodeIgniter\Controller;
 use App\Models\PatientHistoryModel;
 use App\Models\PatientModel;
 
-class MedicalRecord extends BaseController
+class MedicalRecords extends Controller
 {
     protected $patientHistoryModel;
     protected $patientModel;
@@ -23,27 +23,13 @@ class MedicalRecord extends BaseController
             return redirect()->to('/dashboard');
         }
 
-        // Get filter parameter
-        $filter = $this->request->getGet('filter');
-        $doctor_id = session()->get('user_id');
-
-        // Get records based on filter
-        if ($filter === 'pending') {
-            $records = $this->patientHistoryModel->where('consultation_by', $doctor_id)
-                ->where('is_done', false)
-                ->findAll();
-        } else {
-            $records = $this->patientHistoryModel->where('consultation_by', $doctor_id)
-                ->findAll();
-        }
 
         $data = [
             'title' => 'Medical Records',
-            'records' => $records,
-            'filter' => $filter
+            'patients' => $this->patientModel->findAll()
         ];
 
-        return view('medical_records/index', $data);
+        return view('medical-records/index', $data);
     }
 
     public function create($recordNumber = null)
