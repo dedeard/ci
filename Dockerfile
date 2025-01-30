@@ -36,15 +36,15 @@ COPY . /var/www/html/
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 777 /var/www/html/writable/
+    && chmod -R 775 /var/www/html \
+    && chmod -R 775 /var/www/html/writable/cache \
+    && chmod -R 775 /var/www/html/writable
 
 # Configure Apache document root
 RUN sed -i -e "s/html/html\/public/g" /etc/apache2/sites-available/000-default.conf
 
 # Run Composer Install
 RUN composer install
-
-
 
 # Expose port 80
 EXPOSE 80
