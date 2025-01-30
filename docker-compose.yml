@@ -8,5 +8,5 @@ services:
     volumes:
       - .:/var/www/html
     environment:
-      CI_ENVIRONMENT: production
+      CI_ENVIRONMENT: development
       app.baseURL: http://13.229.16.216:8080
