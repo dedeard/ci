@@ -5,16 +5,19 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\PatientHistoryModel;
 use App\Models\PatientModel;
+use App\Models\UserModel;
 
 class MedicalRecords extends Controller
 {
     protected $patientHistoryModel;
     protected $patientModel;
+    protected $userModel;
 
     public function __construct()
     {
         $this->patientHistoryModel = new PatientHistoryModel();
         $this->patientModel = new PatientModel();
+        $this->userModel = new UserModel();
     }
 
     public function index()
@@ -32,66 +35,127 @@ class MedicalRecords extends Controller
         return view('medical-records/index', $data);
     }
 
-    public function create($recordNumber = null)
+    public function view($recordNumber)
     {
-        if (!$recordNumber) {
-            return redirect()->back()->with('error', 'Record number is required');
-        }
+        $patient = $this->patientModel->where('record_number', $recordNumber)->first();
 
-        if ($this->request->getMethod() === 'post') {
-            $record = [
-                'record_number' => $recordNumber,
-                'date_visit' => date('Y-m-d H:i:s'),
-                'symptoms' => $this->request->getPost('symptoms'),
-                'doctor_diagnose' => $this->request->getPost('doctor_diagnose'),
-                'icd10_code' => $this->request->getPost('icd10_code'),
-                'icd10_name' => $this->request->getPost('icd10_name'),
-                'consultation_by' => session()->get('user_id'),
-                'registered_by' => session()->get('user_id'),
-                'is_done' => false
-            ];
-
-            if ($this->patientHistoryModel->insert($record)) {
-                return redirect()->to('/medical-records')
-                    ->with('success', 'Medical record created successfully');
-            }
-
-            return redirect()->back()
-                ->with('error', 'Failed to create medical record')
-                ->withInput();
-        }
-
-        $data = [
-            'title' => 'Create Medical Record',
-            'patient' => $this->patientModel->where('record_number', $recordNumber)->first()
-        ];
-
-        if (empty($data['patient'])) {
+        if (!$patient) {
             return redirect()->back()->with('error', 'Patient not found');
         }
 
-        return view('medical_records/create', $data);
+        $records = $this->patientHistoryModel->where('record_number', $recordNumber)->findAll();
+
+        $data = [
+            'title' => 'View Medical Records',
+            'patient' => $patient,
+            'records' => $records
+        ];
+
+        return view('medical-records/view', $data);
     }
 
-    public function update($id)
+    public function create($recordNumber = null)
     {
-        $record = $this->patientHistoryModel->find($id);
-
-        if (!$record) {
-            return redirect()->back()->with('error', 'Record not found');
+        // Check session and patient
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
         }
 
-        if ($this->request->getMethod() === 'post') {
+        $patient = $this->patientModel->where('record_number', $recordNumber)->first();
+        if (!$patient) {
+            return redirect()->to('/medical-records')
+                ->with('error', 'Patient not found');
+        }
+
+        if ($this->request->getMethod() === 'POST') {
+            $rules = [
+                'date_visit' => 'required|valid_date',
+                'consultation_by' => 'required|numeric|is_not_unique[users.id]',
+                'symptoms' => 'required|min_length[10]',
+                'doctor_diagnose' => 'required|min_length[10]',
+                'icd10_code' => 'required|max_length[20]',
+                'icd10_name' => 'required|max_length[100]'
+            ];
+
+            if ($this->validate($rules)) {
+                $visitData = [
+                    'record_number' => $recordNumber,
+                    'date_visit' => $this->request->getPost('date_visit'),
+                    'registered_by' => session()->get('id'),
+                    'consultation_by' => $this->request->getPost('consultation_by'),
+                    'symptoms' => trim($this->request->getPost('symptoms')),
+                    'doctor_diagnose' => trim($this->request->getPost('doctor_diagnose')),
+                    'icd10_code' => trim($this->request->getPost('icd10_code')),
+                    'icd10_name' => trim($this->request->getPost('icd10_name')),
+                    'is_done' => $this->request->getPost('is_done') == '1' ? true : false
+                ];
+
+                if ($this->patientHistoryModel->insert($visitData)) {
+                    return redirect()->to('/medical-records/view/' . $recordNumber)
+                        ->with('success', 'New visit record created successfully');
+                }
+
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Failed to create visit record');
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->with('validation', $this->validator);
+        }
+
+        // Get active doctors
+        $doctors = $this->userModel->where('role', 'Doctor')->findAll();
+
+        return view('medical-records/form', [
+            'title' => 'Create New Visit',
+            'patient' => $patient,
+            'doctors' => $doctors,
+            'old' => $this->request->getPost(),
+            'validation' => \Config\Services::validation()
+        ]);
+    }
+
+
+    public function edit($id)
+    {
+        $visit = $this->patientHistoryModel->find($id);
+
+        if (!$visit) {
+            return redirect()->back()->with('error', 'Visit not found');
+        }
+
+        if ($this->request->getMethod() === 'POST') {
+            $validationRules = [
+                'date_visit' => 'required|valid_date',
+                'consultation_by' => 'required|numeric|is_not_unique[users.id]',
+                'symptoms' => 'required|min_length[10]',
+                'doctor_diagnose' => 'required|min_length[10]',
+                'icd10_code' => 'required|max_length[20]',
+                'icd10_name' => 'required|max_length[100]'
+            ];
+
+            if (!$this->validate($validationRules)) {
+                return redirect()->back()
+                    ->with('error', 'Please check your input.')
+                    ->withInput()
+                    ->with('validation', $this->validator);
+            }
+
             $data = [
-                'symptoms' => $this->request->getPost('symptoms'),
-                'doctor_diagnose' => $this->request->getPost('doctor_diagnose'),
-                'icd10_code' => $this->request->getPost('icd10_code'),
-                'icd10_name' => $this->request->getPost('icd10_name'),
-                'is_done' => $this->request->getPost('is_done') ? true : false
+                'date_visit' => $this->request->getPost('date_visit'),
+                'registered_by' => session()->get('id'),
+                'consultation_by' => $this->request->getPost('consultation_by'),
+                'symptoms' => trim($this->request->getPost('symptoms')),
+                'doctor_diagnose' => trim($this->request->getPost('doctor_diagnose')),
+                'icd10_code' => trim($this->request->getPost('icd10_code')),
+                'icd10_name' => trim($this->request->getPost('icd10_name')),
+                'is_done' => $this->request->getPost('is_done') == '1' ? true : false
             ];
 
             if ($this->patientHistoryModel->update($id, $data)) {
-                return redirect()->to('/medical-records')
+                return redirect()->to('/medical-records/view/' . $visit['record_number'])
                     ->with('success', 'Medical record updated successfully');
             }
 
@@ -100,54 +164,22 @@ class MedicalRecords extends Controller
                 ->withInput();
         }
 
+
+        // Get active doctors
+        $doctors = $this->userModel->where('role', 'Doctor')->findAll();
+
+        $patient = $this->patientModel->where('record_number', $visit['record_number'])->first();
+
+
         $data = [
             'title' => 'Update Medical Record',
-            'record' => $record,
-            'patient' => $this->patientModel->where('record_number', $record['record_number'])->first()
+            'visit' => $visit,
+            'doctors' => $doctors,
+            'patient' =>  $patient,
+            'old' => $this->request->getPost(),
+            'validation' => \Config\Services::validation()
         ];
 
-        return view('medical_records/edit', $data);
-    }
-
-    public function searchICD()
-    {
-        $term = $this->request->getGet('term');
-
-        if (empty($term)) {
-            return $this->response->setJSON([]);
-        }
-
-        try {
-            // Call WHO ICD API here
-            $client = \Config\Services::curlrequest();
-            $response = $client->request('GET', 'https://id.who.int/icdapi/entity/search', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'API-Version' => 'v2',
-                    'Accept-Language' => 'en'
-                ],
-                'query' => [
-                    'q' => $term,
-                    'releaseId' => '2023-01'
-                ]
-            ]);
-
-            return $this->response->setJSON(json_decode($response->getBody()));
-        } catch (\Exception $e) {
-            log_message('error', 'ICD API Error: ' . $e->getMessage());
-            return $this->response->setJSON([
-                'error' => 'Failed to fetch ICD codes. Please try again later.'
-            ])->setStatusCode(500);
-        }
-    }
-
-    public function getPendingPatients()
-    {
-        $doctor_id = session()->get('user_id');
-        $records = $this->patientHistoryModel->where('consultation_by', $doctor_id)
-            ->where('is_done', false)
-            ->findAll();
-
-        return $this->response->setJSON($records);
+        return view('medical-records/form', $data);
     }
 }

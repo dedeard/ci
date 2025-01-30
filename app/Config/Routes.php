@@ -15,7 +15,7 @@ $routes->get('logout', 'Auth::logout');
 $routes->get('dashboard', 'Dashboard::index', ['filter' => 'auth']);
 
 // User Management (Admin only)
-$routes->group('users', ['filter' => 'admin'], function($routes) {
+$routes->group('users', ['filter' => 'admin'], function ($routes) {
     $routes->get('', 'Users::index');
     $routes->get('create', 'Users::create');
     $routes->post('create', 'Users::create');
@@ -25,7 +25,7 @@ $routes->group('users', ['filter' => 'admin'], function($routes) {
 });
 
 // Patient Management
-$routes->group('patients', ['filter' => 'auth'], function($routes) {
+$routes->group('patients', ['filter' => 'auth'], function ($routes) {
     $routes->get('', 'Patients::index');
     $routes->get('create', 'Patients::create', ['filter' => 'admin']);
     $routes->post('create', 'Patients::create', ['filter' => 'admin']);
@@ -35,13 +35,14 @@ $routes->group('patients', ['filter' => 'auth'], function($routes) {
 });
 
 // Medical Records Management
-$routes->group('medical-records', ['filter' => 'auth'], function($routes) {
+$routes->group('medical-records', ['filter' => 'auth'], function ($routes) {
     $routes->get('', 'MedicalRecords::index');
     $routes->get('create', 'MedicalRecords::create');
     $routes->get('create/(:segment)', 'MedicalRecords::create/$1');
-    $routes->post('create', 'MedicalRecords::create');
+    $routes->post('create/(:segment)', 'MedicalRecords::create/$1');
+    $routes->get('edit/(:num)', 'MedicalRecords::edit/$1');
+    $routes->post('edit/(:num)', 'MedicalRecords::edit/$1');
     $routes->get('view/(:num)', 'MedicalRecords::view/$1');
     $routes->get('complete/(:num)', 'MedicalRecords::complete/$1');
-    $routes->get('search-icd10', 'MedicalRecords::searchICD10');
     $routes->get('icd10-details/(:segment)', 'MedicalRecords::getICD10Details/$1');
 });

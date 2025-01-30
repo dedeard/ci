@@ -1,112 +1,227 @@
 <?= $this->extend('layouts/app') ?>
 
 <?= $this->section('content') ?>
-<div class="row">
-    <div class="col-md-8">
-        <h2><?= isset($record) ? 'Edit Medical Record' : 'Create Medical Record' ?></h2>
 
-        <?php if (session()->getFlashdata('error')): ?>
-            <div class="alert alert-danger">
-                <?= session()->getFlashdata('error') ?>
-            </div>
-        <?php endif; ?>
+<?= helper('form'); ?>
 
-        <form action="<?= isset($record) ? base_url('medical-records/edit/' . $record['id']) : base_url('medical-records/create') ?>" method="post">
-            <?php if (isset($patient)): ?>
-            <div class="card mb-3">
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"> <?= !empty($visit) ? 'Edit Visit' : 'Create New Visit' ?> </h5>
+                    </div>
+                </div>
+
+                <?php if (session()->getFlashdata('success')): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <?= session()->getFlashdata('success') ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (session()->getFlashdata('error')): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <?= session()->getFlashdata('error') ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
                 <div class="card-body">
-                    <h5 class="card-title">Patient Information</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Record Number:</strong> <?= $patient['record_number'] ?></p>
-                            <p><strong>Name:</strong> <?= $patient['name'] ?></p>
-                            <p><strong>Gender:</strong> <?= $patient['gender'] ?></p>
+                    <!-- Patient Info Summary -->
+                    <div class="alert alert-info mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Patient:</strong> <?= esc($patient['name']) ?></p>
+                                <p class="mb-1"><strong>Record #:</strong> <?= esc($patient['record_number']) ?></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Birth:</strong> <?= date('d M Y', strtotime($patient['birth'])) ?></p>
+                                <p class="mb-1"><strong>Blood Type:</strong> <?= esc($patient['blood_type']) ?></p>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <p><strong>Date of Birth:</strong> <?= $patient['date_of_birth'] ?></p>
-                            <p><strong>Contact:</strong> <?= $patient['contact_number'] ?></p>
+                    </div>
+                    <form action="<?= !empty($visit) ? base_url('medical-records/edit/' . $visit['id']) : base_url('medical-records/create/' . $patient['record_number']) ?>" method="POST">
+
+                        <?= csrf_field() ?>
+
+                        <div class="mb-3">
+                            <label for="date_visit" class="form-label">
+                                Visit Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="datetime-local"
+                                class="form-control <?= (isset($validation) && $validation->hasError('date_visit')) ? 'is-invalid' : '' ?>"
+                                id="date_visit"
+                                name="date_visit"
+                                value="<?= $old['date_visit'] ?? $visit['date_visit'] ?? date('Y-m-d\TH:i') ?>">
+                            <div class="invalid-feedback">
+                                <?= isset($validation) ? $validation->getError('date_visit') : '' ?>
+                            </div>
                         </div>
-                    </div>
+
+                        <div class="mb-3">
+                            <label for="consultation_by" class="form-label">
+                                Consulting Doctor <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select <?= (isset($validation) && $validation->hasError('consultation_by')) ? 'is-invalid' : '' ?>"
+                                id="consultation_by"
+                                name="consultation_by">
+                                <option value="">Select Doctor</option>
+                                <?php foreach ($doctors as $doctor): ?>
+                                    <option value="<?= $doctor['id'] ?>" <?= ($old['consultation_by'] ?? $visit['consultation_by'] ?? '') == $doctor['id'] ? 'selected' : '' ?>>
+                                        <?= esc($doctor['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="invalid-feedback">
+                                <?= isset($validation) ? $validation->getError('consultation_by') : '' ?>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="symptoms" class="form-label">
+                                Symptoms <span class="text-danger">*</span>
+                            </label>
+                            <textarea
+                                class="form-control <?= (isset($validation) && $validation->hasError('symptoms')) ? 'is-invalid' : '' ?>"
+                                id="symptoms"
+                                name="symptoms"
+                                rows="3"
+                                placeholder="Describe the symptoms"><?= $old['symptoms'] ?? $visit['symptoms'] ?? '' ?></textarea>
+                            <div class="invalid-feedback">
+                                <?= isset($validation) ? $validation->getError('symptoms') : '' ?>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="doctor_diagnose" class="form-label">
+                                Doctor's Diagnosis <span class="text-danger">*</span>
+                            </label>
+                            <textarea
+                                class="form-control <?= (isset($validation) && $validation->hasError('doctor_diagnose')) ? 'is-invalid' : '' ?>"
+                                id="doctor_diagnose"
+                                name="doctor_diagnose"
+                                rows="3"
+                                placeholder="Enter diagnosis"><?= $old['doctor_diagnose'] ?? $visit['doctor_diagnose'] ?? '' ?></textarea>
+                            <div class="invalid-feedback">
+                                <?= isset($validation) ? $validation->getError('doctor_diagnose') : '' ?>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="icd10_code" class="form-label">
+                                ICD-10 Code <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select <?= (isset($validation) && $validation->hasError('icd10_code')) ? 'is-invalid' : '' ?>"
+                                id="icd10_select"
+                                name="icd10_code"
+                                autocomplete="off">
+                                <?php if ($old['icd10_code'] ?? $visit['icd10_code'] ?? ''): ?>
+                                    <option value="<?= $old['icd10_code'] ?? $visit['icd10_code'] ?>" selected><?= $old['icd10_code'] ?? $visit['icd10_code'] ?> - <?= $old['icd10_name'] ?? $visit['icd10_name'] ?></option>
+                                <?php endif; ?>
+                            </select>
+                            <div class="invalid-feedback">
+                                <?= isset($validation) ? $validation->getError('icd10_code') : '' ?>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="icd10_name" class="form-label">
+                                ICD-10 Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                class="form-control <?= (isset($validation) && $validation->hasError('icd10_name')) ? 'is-invalid' : '' ?>"
+                                id="icd10_name"
+                                name="icd10_name"
+                                value="<?= $old['icd10_name'] ?? $visit['icd10_name'] ?? '' ?>"
+                                readonly>
+                            <div class="invalid-feedback">
+                                <?= isset($validation) ? $validation->getError('icd10_name') : '' ?>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="is_done" class="form-label">
+                                Status <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select"
+                                id="is_done"
+                                name="is_done">
+                                <option value="0" <?= ($old['is_done'] ?? $visit['is_done'] ?? '') ? 'selected' : '' ?>>
+                                    Pending
+                                </option>
+                                <option value="1" <?= ($old['is_done'] ?? $visit['is_done'] ?? '') ? 'selected' : '' ?>>
+                                    Done
+                                </option>
+                            </select>
+                            <div class="invalid-feedback">
+                                <?= isset($validation) ? $validation->getError('is_done') : '' ?>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="<?= base_url('medical-records/view/' . $patient['record_number']) ?>" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-            <input type="hidden" name="patient_id" value="<?= $patient['id'] ?>">
-            <?php endif; ?>
-
-            <div class="form-group">
-                <label for="chief_complaint">Chief Complaint</label>
-                <textarea class="form-control" id="chief_complaint" name="chief_complaint" rows="3" required><?= isset($record) ? $record['chief_complaint'] : set_value('chief_complaint') ?></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="present_illness">History of Present Illness</label>
-                <textarea class="form-control" id="present_illness" name="present_illness" rows="3" required><?= isset($record) ? $record['present_illness'] : set_value('present_illness') ?></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="vital_signs">Vital Signs</label>
-                <div class="row">
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" name="blood_pressure" placeholder="Blood Pressure" value="<?= isset($record) ? $record['blood_pressure'] : set_value('blood_pressure') ?>" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" name="heart_rate" placeholder="Heart Rate" value="<?= isset($record) ? $record['heart_rate'] : set_value('heart_rate') ?>" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" name="temperature" placeholder="Temperature" value="<?= isset($record) ? $record['temperature'] : set_value('temperature') ?>" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" name="respiratory_rate" placeholder="Respiratory Rate" value="<?= isset($record) ? $record['respiratory_rate'] : set_value('respiratory_rate') ?>" required>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="physical_examination">Physical Examination</label>
-                <textarea class="form-control" id="physical_examination" name="physical_examination" rows="3" required><?= isset($record) ? $record['physical_examination'] : set_value('physical_examination') ?></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="assessment">Assessment/Diagnosis</label>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="icd10_search" placeholder="Search ICD-10 codes...">
-                    <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="button" onclick="searchICD10()">Search</button>
-                    </div>
-                </div>
-                <div id="icd10_results" class="mb-2"></div>
-                <textarea class="form-control" id="assessment" name="assessment" rows="3" required><?= isset($record) ? $record['assessment'] : set_value('assessment') ?></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="plan">Plan/Treatment</label>
-                <textarea class="form-control" id="plan" name="plan" rows="3" required><?= isset($record) ? $record['plan'] : set_value('plan') ?></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a href="<?= base_url('medical-records') ?>" class="btn btn-secondary">Cancel</a>
-        </form>
+        </div>
     </div>
 </div>
 
+<!-- section script -->
+<?= $this->section('script') ?>
 <script>
-function searchICD10() {
-    const query = document.getElementById('icd10_search').value;
-    fetch(`<?= base_url('medical-records/search-icd10') ?>?q=${query}`)
-        .then(response => response.json())
-        .then(data => {
-            const resultsDiv = document.getElementById('icd10_results');
-            resultsDiv.innerHTML = '';
-            data.forEach(item => {
-                const btn = document.createElement('button');
-                btn.className = 'btn btn-sm btn-outline-primary mr-2 mb-2';
-                btn.textContent = `${item.code} - ${item.description}`;
-                btn.onclick = function() {
-                    const assessment = document.getElementById('assessment');
-                    assessment.value += `\nICD-10: ${item.code} - ${item.description}`;
-                };
-                resultsDiv.appendChild(btn);
-            });
+    document.addEventListener('DOMContentLoaded', function() {
+        new TomSelect('#icd10_select', {
+            valueField: 'code',
+            labelField: 'name',
+            searchField: ['code', 'name'],
+            maxItems: 1,
+            maxOptions: 50,
+            create: false,
+            render: {
+                option: function(item, escape) {
+                    return '<div>' +
+                        '<span class="fw-bold">' + escape(item.code) + '</span> - ' +
+                        '<span class="text-muted">' + escape(item.name) + '</span>' +
+                        '</div>';
+                },
+                item: function(item, escape) {
+                    return '<div>' + escape(item.code) + ' - ' + escape(item.name) + '</div>';
+                }
+            },
+            load: function(query, callback) {
+                if (!query.length) return callback();
+
+                fetch(`https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&terms=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(json => {
+                        const results = json[3].map((item, index) => ({
+                            code: item[0],
+                            name: item[1]
+                        }));
+                        callback(results);
+                    })
+                    .catch(() => callback());
+            },
+            onChange: function(value) {
+                const item = this.options[value];
+                if (item) {
+                    document.getElementById('icd10_name').value = item.name;
+                }
+            }
         });
-}
+    });
 </script>
+<?= $this->endSection() ?>
 <?= $this->endSection() ?>

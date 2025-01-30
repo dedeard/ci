@@ -47,20 +47,7 @@ class PatientHistoryModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
-    /**
-     * Validation Rules
-     */
-    protected $validationRules = [
-        'record_number'    => 'required|integer|exists[patients.record_number]',
-        'date_visit'       => 'required|valid_date',
-        'registered_by'    => 'required|integer|exists[users.id]',
-        'consultation_by'  => 'required|integer|exists[users.id]',
-        'symptoms'         => 'required',
-        'doctor_diagnose'  => 'required_with[icd10_code]',
-        'icd10_code'      => 'permit_empty|max_length[20]',
-        'icd10_name'      => 'permit_empty|max_length[100]',
-        'is_done'         => 'required|in_list[0,1]'
-    ];
+
 
     /**
      * Get complete patient history with related information
