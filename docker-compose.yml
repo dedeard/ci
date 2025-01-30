@@ -10,10 +10,10 @@ services:
     depends_on:
       - mysql
     environment:
-      CI_ENVIRONMENT: production
+      CI_ENVIRONMENT: development
       # app.baseURL: https://simrs.dedeard.my.id
       app.baseURL: http://13.229.16.216:8080
-      DB_HOST: mysql
+      DB_HOST: 127.0.0.1
       DB_PORT: 3300
       DB_DATABASE: simrs
       DB_USERNAME: simrs

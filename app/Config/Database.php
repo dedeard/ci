@@ -26,7 +26,7 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-        'hostname'     => 'mysql',
+        'hostname'     => '127.0.0.1',
         'username'     => 'simrs',
         'password'     => 'simrs',
         'database'     => 'simrs',
