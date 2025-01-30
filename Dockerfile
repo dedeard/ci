@@ -44,9 +44,6 @@ RUN sed -i -e "s/html/html\/public/g" /etc/apache2/sites-available/000-default.c
 # Run Composer Install
 RUN composer install
 
-RUN php spark migrate 
-
-RUN php spark db:seed UserSeeder
 
 
 # Expose port 80
