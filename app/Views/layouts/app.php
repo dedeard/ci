@@ -87,13 +87,15 @@
                                 </a>
                             </li>
                         <?php endif; ?>
-                        <li class="nav-item">
-                            <a class="nav-link <?= url_is('medical-records*') ? 'active' : '' ?>"
-                                href="<?= base_url('medical-records') ?>">
-                                <i class="bi bi-journal-medical"></i>
-                                Medical Records
-                            </a>
-                        </li>
+                        <?php if (session()->get('role') === 'Doctor'): ?>
+                            <li class="nav-item">
+                                <a class="nav-link <?= url_is('medical-records*') ? 'active' : '' ?>"
+                                    href="<?= base_url('medical-records') ?>">
+                                    <i class="bi bi-journal-medical"></i>
+                                    Medical Records
+                                </a>
+                            </li>
+                        <?php endif; ?>
                         <?php if (session()->get('role') === 'Admin'): ?>
                             <li class="nav-item">
                                 <a class="nav-link <?= url_is('users*') ? 'active' : '' ?>"
@@ -136,7 +138,9 @@
                 </nav>
 
                 <!-- Page Content -->
-                <?= $this->renderSection('content') ?>
+                <div class="py-3">
+                    <?= $this->renderSection('content') ?>
+                </div>
             </main>
         </div>
     </div>

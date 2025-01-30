@@ -26,14 +26,21 @@ class MedicalRecords extends Controller
             return redirect()->to('/dashboard');
         }
 
+        // Query untuk mendapatkan pasien beserta total kunjungan dan total is_done
+        $patients = $this->patientModel
+            ->select('patients.*, COUNT(ph.id) as total_visits, COALESCE(SUM(ph.is_done), 0) as total_completed')
+            ->join('patient_history ph', 'ph.record_number = patients.record_number', 'left')
+            ->groupBy('patients.record_number')
+            ->findAll();
 
         $data = [
             'title' => 'Medical Records',
-            'patients' => $this->patientModel->findAll()
+            'patients' => $patients
         ];
 
         return view('medical-records/index', $data);
     }
+
 
     public function view($recordNumber)
     {

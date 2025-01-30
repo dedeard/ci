@@ -76,7 +76,6 @@
                                     <th>Symptoms</th>
                                     <th>Diagnosis</th>
                                     <th>ICD-10</th>
-                                    <th>Doctor</th>
                                     <th>Status</th>
                                     <th class="text-end">Actions</th>
                                 </tr>
@@ -96,7 +95,6 @@
                                                 <span class="text-muted"><?= esc($record['icd10_code']) ?></span>
                                                 <small class="d-block"><?= esc($record['icd10_name']) ?></small>
                                             </td>
-                                            <td><?= esc($record['consultation_by']) ?></td>
                                             <td>
                                                 <span class="badge bg-<?= $record['is_done'] ? 'success' : 'warning' ?>">
                                                     <?= $record['is_done'] ? 'Completed' : 'Pending' ?>
