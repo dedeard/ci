@@ -28,6 +28,8 @@ services:
       MYSQL_USER: simrs
       MYSQL_PASSWORD: simrs
       MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_ROOT_HOST: "%" # Memungkinkan root login dari mana saja
+    command: --bind-address=0.0.0.0 --default-authentication-plugin=mysql_native_password
     volumes:
       - mysql_data:/var/lib/mysql
 
