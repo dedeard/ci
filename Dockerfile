@@ -45,7 +45,7 @@ RUN sed -i -e "s/html/html\/public/g" /etc/apache2/sites-available/000-default.c
 RUN composer install --no-dev --optimize-autoloader
 
 # Run database migrations and seeders (for Laravel)
-RUN php artisan migrate --force && php artisan db:seed --force
+RUN php spark migrate && php spark db:seed
 
 # Expose port 80
 EXPOSE 80
