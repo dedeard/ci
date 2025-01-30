@@ -26,10 +26,10 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-        'hostname'     => '127.0.0.1',
-        'username'     => 'simrs',
-        'password'     => 'simrs',
-        'database'     => 'simrs',
+        'hostname'     => 'df518.h.filess.io',
+        'username'     => 'simrs_fatpathcut',
+        'password'     => '2697ec9823eecd494ecff0aa8496e71802981a1c',
+        'database'     => 'simrs_fatpathcut',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
@@ -41,7 +41,7 @@ class Database extends Config
         'compress'     => false,
         'strictOn'     => false,
         'failover'     => [],
-        'port'         => 3300,
+        'port'         => 3307,
         'numberNative' => false,
         'foundRows'    => false,
         'dateFormat'   => [
