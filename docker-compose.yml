@@ -10,7 +10,8 @@ services:
     depends_on:
       - mysql
     environment:
-      CI_ENVIRONMENT: development
+      CI_ENVIRONMENT: production
+      app.baseURL: https://simrs.dedeard.my.id
       DB_HOST: mysql
       DB_DATABASE: ci4_app
       DB_USERNAME: ci4user
