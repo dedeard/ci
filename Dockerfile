@@ -42,7 +42,11 @@ RUN chown -R www-data:www-data /var/www/html \
 RUN sed -i -e "s/html/html\/public/g" /etc/apache2/sites-available/000-default.conf
 
 # Run Composer Install
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install
+
+RUN php spark migrate 
+
+RUN php spark db:seed UserSeeder
 
 
 # Expose port 80
