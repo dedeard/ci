@@ -26,10 +26,10 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-        'hostname'     => '127.0.0.1',
-        'username'     => 'simrs',
-        'password'     => 'simrs',
-        'database'     => 'simrs',
+        'hostname'     => '13.229.16.216',
+        'username'     => 'root',
+        'password'     => 'root',
+        'database'     => 'simrs_test',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
