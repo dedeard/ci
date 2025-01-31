@@ -55,14 +55,6 @@
                         <td><?= esc($patient['phone']) ?></td>
                         <td class="text-nowrap">
                             <div class="btn-group" role="group">
-                                <a href="<?= base_url('medical-records/create/' . $patient['record_number']) ?>"
-                                    class="btn btn-sm btn-success"
-                                    data-bs-toggle="tooltip"
-                                    title="New Visit">
-                                    <i class="bi bi-plus-circle"></i>
-                                </a>
-
-
                                 <?php if (session()->get('role') === 'Admin'): ?>
                                     <a href="<?= base_url('patients/edit/' . $patient['id']) ?>"
                                         class="btn btn-sm btn-primary"

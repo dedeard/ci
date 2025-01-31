@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical Records System</title>
+    <title>SIMAWI</title>
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -66,8 +66,9 @@
                 <div class="position-sticky">
                     <a class="navbar-brand d-flex align-items-center" href="<?= base_url('dashboard') ?>">
                         <i class="bi bi-hospital me-2"></i>
-                        Medical Records
+                        SIMAWI
                     </a>
+
 
                     <ul class="nav flex-column mt-3">
                         <li class="nav-item">
