@@ -29,6 +29,65 @@ class Patients extends Controller
         return view('patients/index', $data);
     }
 
+    public function datatables()
+    {
+        // Get request parameters for DataTables
+        $draw = $this->request->getPost('draw'); // Draw counter for DataTables
+        $start = $this->request->getPost('start'); // Start record for pagination
+        $length = $this->request->getPost('length'); // Number of records per page
+        $searchValue = $this->request->getPost('search')['value']; // Search value
+        $orderColumn = $this->request->getPost('order')[0]['column']; // Column index for sorting
+        $orderDir = $this->request->getPost('order')[0]['dir']; // Sort direction (asc/desc)
+
+        // Define column mappings for sorting
+        $columns = [
+            0 => 'record_number',
+            1 => 'name',
+            2 => 'birth',
+            3 => 'nik',
+            4 => 'phone',
+            5 => 'address',
+            6 => 'blood_type',
+            7 => 'weight',
+            8 => 'height'
+        ];
+
+        // Build the query with search and sort
+        $builder = $this->patientModel;
+
+        // Apply search filter
+        if (!empty($searchValue)) {
+            $builder->groupStart()
+                ->like('name', $searchValue)
+                ->orLike('record_number', $searchValue)
+                ->orLike('nik', $searchValue)
+                ->orLike('phone', $searchValue)
+                ->orLike('address', $searchValue)
+                ->groupEnd();
+        }
+
+        // Apply sorting
+        if (isset($columns[$orderColumn])) {
+            $builder->orderBy($columns[$orderColumn], $orderDir);
+        }
+
+        // Get total records count (without pagination)
+        $totalRecords = $builder->countAllResults(false);
+
+        // Apply pagination
+        $data = $builder->findAll($length, $start);
+
+        // Prepare response for DataTables
+        $response = [
+            'draw' => intval($draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $totalRecords, // Same as totalRecords if no search is applied
+            'data' => $data
+        ];
+
+        return $this->response->setJSON($response);
+    }
+
     public function create()
     {
         if ($this->request->getMethod() === 'POST') {

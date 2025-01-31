@@ -27,6 +27,7 @@ $routes->group('users', ['filter' => 'admin'], function ($routes) {
 // Patient Management
 $routes->group('patients', ['filter' => 'auth'], function ($routes) {
     $routes->get('', 'Patients::index');
+    $routes->post('datatables', 'Patients::datatables');
     $routes->get('create', 'Patients::create', ['filter' => 'admin']);
     $routes->post('create', 'Patients::create', ['filter' => 'admin']);
     $routes->get('edit/(:num)', 'Patients::edit/$1', ['filter' => 'admin']);
